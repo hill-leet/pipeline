@@ -5,3 +5,13 @@ url = "https://api.freecurrencyapi.com/v1/latest?apikey=wrlJlPAi3so0k2GZQN19QaZx
 r = requests.get(url)
 
 print(r.text)
+
+
+def mm():
+    s = 4
+
+def rr():
+    print(s)
+
+mm()
+rr()
