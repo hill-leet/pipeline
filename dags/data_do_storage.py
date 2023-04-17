@@ -24,9 +24,6 @@ from bs4 import BeautifulSoup
 import boto3
 from botocore.exceptions import ClientError
 
-import pyspark
-from pyspark.sql import SparkSession, types
-
 # Common settings for your environment
 YC_FOLDER_ID = 'b1g1l7pihs57iohepe9q'  # YC catalog to create cluster
 YC_SUBNET_ID = 'e9bhc6hgqnagfnesilob'  # YC subnet to create cluster
@@ -79,10 +76,6 @@ def read_data(bucket_name, destination, schema=None):
 def data_to_storage(
         bucket_name
 ):
-    spark = SparkSession.builder \
-    .master("local[*]") \
-    .appName('test') \
-    .getOrCreate()
 
     # Connecting to S3
     session = boto3.session.Session()
@@ -94,61 +87,7 @@ def data_to_storage(
     region_name='ru-central1'
     )
 
-    spark_schemas = {
-        'name.basic': types.StructType([
-            types.StructField('nconst',types.StringType(),True),
-            types.StructField('primaryName',types.StringType(),True),
-            types.StructField('birthYear',types.IntegerType(),True),
-            types.StructField('deathYear',types.IntegerType(),True),
-            types.StructField('primaryProfession',types.StringType(),True),
-            types.StructField('knownForTitles',types.StringType(),True)
-        ]),
-        'title.akas': types.StructType([
-            types.StructField('titleId',types.StringType(),True),
-            types.StructField('ordering',types.IntegerType(),True),
-            types.StructField('title',types.StringType(),True),
-            types.StructField('region',types.StringType(),True),
-            types.StructField('language',types.StringType(),True),
-            types.StructField('types',types.StringType(),True),
-            types.StructField('attributes',types.StringType(),True),
-            types.StructField('isOriginalTitle',types.IntegerType(),True)
-        ]),
-        'title.basics': types.StructType([
-            types.StructField('tconst',types.StringType(),True),
-            types.StructField('titleType',types.StringType(),True),
-            types.StructField('primaryTitle',types.StringType(),True),
-            types.StructField('originalTitle',types.StringType(),True),
-            types.StructField('isAdult',types.IntegerType(),True),
-            types.StructField('startYear',types.IntegerType(),True),
-            types.StructField('endYear',types.IntegerType(),True),
-            types.StructField('runtimeMinutes',types.IntegerType(),True),
-            types.StructField('genres',types.StringType(),True)
-        ]),
-        'title.crew': types.StructType([
-            types.StructField('tconst',types.StringType(),True),
-            types.StructField('directors',types.StringType(),True),
-            types.StructField('writers',types.StringType(),True)
-        ]),
-        'title.episode': types.StructType([
-            types.StructField('tconst',types.StringType(),True),
-            types.StructField('parentTconst',types.StringType(),True),
-            types.StructField('seasonNumber',types.IntegerType(),True),
-            types.StructField('episodeNumber',types.IntegerType(),True)
-        ]),
-        'title.principals': types.StructType([
-            types.StructField('tconst',types.StringType(),True),
-            types.StructField('ordering',types.IntegerType(),True),
-            types.StructField('nconst',types.StringType(),True),
-            types.StructField('category',types.StringType(),True),
-            types.StructField('job',types.StringType(),True),
-            types.StructField('characters',types.StringType(),True)
-        ]),
-        'title.rating': types.StructType([
-            types.StructField('tconst',types.StringType(),True),
-            types.StructField('averageRating',types.DoubleType(),True),
-            types.StructField('numVotes',types.IntegerType(),True)
-        ]),
-    }
+    
 
     with DAG(
             'data_to_storage',
@@ -156,7 +95,7 @@ def data_to_storage(
             catchup=False
     ) as dag:
         
-        create_bucket = PythonOperator(
+        create_bucket_task = PythonOperator(
             task_id='create_bucket_task',
             python_callable=create_bucket,
             op_kwargs={
